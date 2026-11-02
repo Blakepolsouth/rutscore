@@ -1,7 +1,7 @@
 {
   "name": "Rut Score",
   "short_name": "Rut Score",
-  "description": "Will deer move today? Deer movement score, best time to hunt and which stand fits the wind.",
+  "description": "How hot is the rut, and will deer move today? Rut Score, Hunt Score and which stand fits the wind.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
