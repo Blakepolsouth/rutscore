@@ -51,6 +51,11 @@
     </div>
   </section>
 
+  <div class="banner samplebanner" id="sampleBanner" hidden>
+    <span>👋 You're looking at <b>sample land</b>. Add your own hunting land to get its Rut Score, Hunt Score and best stand.</span>
+    <div class="bannerbtns"><button class="btn" id="sampleAdd" type="button">＋ Add my land</button></div>
+  </div>
+
   <div class="banner" id="sharedBanner" hidden>
     <span id="sharedTxt"></span>
     <div class="bannerbtns"><button class="btn" id="sharedSave" type="button">Save property</button><button class="btn ghost" id="sharedDismiss" type="button">Not now</button></div>
@@ -69,7 +74,7 @@
         <button class="btn" type="submit">Go</button>
       </form>
       <div class="list results" id="mapResults" hidden></div>
-      <div class="mapwrap"><div id="map" aria-label="Map. Tap to drop a pin on your land."></div><div class="maphint" id="mapHint">Tap your land to drop a pin</div></div>
+      <div class="mapwrap"><div id="map" aria-label="Map. Tap to drop a pin on your land."></div><div class="maphint" id="mapHint">Tap your land to drop a pin</div><div class="twofinger" aria-hidden="true">Use two fingers to move the map</div></div>
       <div class="maptoggle"><button class="chipbtn" id="layerSat" type="button" aria-pressed="true">Satellite</button><button class="chipbtn" id="layerMap" type="button" aria-pressed="false">Map</button></div>
     </div>
     <div class="tabpane" data-pane="coords" hidden>
@@ -117,6 +122,7 @@
     <div class="mapwrap standmapwrap" id="standMapWrap">
       <div id="standMap" aria-label="Map of your stands, colored for today's wind"></div>
       <div class="maphint" id="standHint" hidden></div>
+      <div class="twofinger" aria-hidden="true">Use two fingers to move the map</div>
       <div class="maplegend" id="mapLegend"><span><i style="background:var(--good)"></i>Good wind</span><span><i style="background:var(--fair)"></i>Crosswind</span><span><i style="background:var(--bad)"></i>Bad wind</span></div>
     </div>
     <div class="stands" id="standList"></div>
@@ -239,6 +245,7 @@
   <div class="run"><div class="track" id="track"><span>Loading conditions</span></div></div>
 </div>
 
+<button class="jumppill" id="jumpScores" type="button" hidden>⬇ See the scores</button>
 <script type="module" src="/app.js"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@ const store = {
 };
 const PREVIEW = !/^https?:$/.test(location.protocol) || /claude|claudeusercontent|localhost/.test(location.hostname);
 const DEVICE_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-const SAMPLE = { id: "sample", sample: true, name: "Sample land · Middle Georgia", lat: 32.84, lon: -83.63, rut: "", stands: [{ name: "Creek bottom", bearing: 315, lat: 32.8418, lon: -83.6322 }, { name: "Ridge ladder", bearing: 90, lat: 32.8389, lon: -83.6281 }, { name: "Food plot blind", bearing: 180, lat: 32.8376, lon: -83.6327 }] };
+const SAMPLE = { id: "sample", sample: true, name: "Sample land · Middle Georgia", lat: 32.84, lon: -83.63, rut: "chasing", stands: [{ name: "Creek bottom", bearing: 315, lat: 32.8418, lon: -83.6322 }, { name: "Ridge ladder", bearing: 90, lat: 32.8389, lon: -83.6281 }, { name: "Food plot blind", bearing: 180, lat: 32.8376, lon: -83.6327 }] };
 
 let PROPS = store.get("props", []), PROP = null, MODEL = null, SEL = 0, DEMO = false, SHARED = null;
 const fmtT = (ms, short) => fT(ms, MODEL ? MODEL.tz : "UTC", short);
@@ -23,7 +23,10 @@ const saveProps = () => store.set("props", PROPS);
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 /* ───────── Property picker ───────── */
+function renderSampleBanner() { $("sampleBanner").hidden = !(PROP && PROP.sample) || !$("addPanel").hidden; }
+$("sampleAdd").onclick = () => openAdd(null);
 function renderPropSelect() {
+  renderSampleBanner();
   const sel = $("propSelect"); sel.innerHTML = "";
   const list = PROPS.slice();
   if (PROP && (PROP.sample || PROP.shared)) list.unshift(PROP);
@@ -61,7 +64,7 @@ function render() {
   $("rutSel").value = PROP.rut || "";
   $("rutNote").textContent = s.rutKey ? `${s.rutEstimated ? "Estimated: " : ""}${RUT[s.rutKey].note}` + (s.rutEstimated ? " Rut timing varies by area, so set it above if you know yours." : "")
     : "Rut timing in the South varies a lot from county to county. Set it above for a better score.";
-  $("live").classList.toggle("sample", DEMO || !!PROP.sample); $("liveTxt").textContent = DEMO ? "SAMPLE DATA" : PROP.sample ? "SAMPLE LAND" : "LIVE";
+  $("live").classList.toggle("sample", DEMO || !!PROP.sample); $("liveTxt").textContent = DEMO || PROP.sample ? "SAMPLE" : "LIVE";
   if (!$("shareBox").hidden) fillShareSheet();
   prepareCard();
 }
@@ -207,6 +210,18 @@ function showError() {
   $("retryBtn").onclick = () => load();
 }
 
+/* ───────── Maps on phones: one finger scrolls the page, two fingers move the map ───────── */
+const TOUCH = matchMedia("(pointer: coarse)").matches;
+const mapOpts = () => ({ zoomControl: true, attributionControl: true, dragging: !TOUCH, tap: false, touchZoom: true });
+function twoFingerHint(id) {
+  if (!TOUCH) return;
+  const el = $(id), hint = el.parentElement.querySelector(".twofinger"); let t = null;
+  el.addEventListener("touchmove", e => {
+    if (e.touches.length !== 1 || !hint) return;
+    hint.classList.add("show"); clearTimeout(t); t = setTimeout(() => hint.classList.remove("show"), 1400);
+  }, { passive: true });
+}
+
 /* ───────── Add / move a property ───────── */
 let PENDING = null, EDITING = null, MAP = null, MARKER = null, LAYERS = null;
 function loadLeaflet() {
@@ -220,12 +235,12 @@ async function initMap() {
   if (MAP) { setTimeout(() => MAP.invalidateSize(), 50); return; }
   let L; try { L = await loadLeaflet(); } catch (e) { $("mapHint").textContent = "Map couldn't load. Paste coordinates instead."; return; }
   const start = PENDING || EDITING || (PROPS[0] && { lat: PROPS[0].lat, lon: PROPS[0].lon }) || null;
-  MAP = L.map("map", { zoomControl: true, attributionControl: true }).setView(start ? [start.lat, start.lon] : [36.5, -86.5], start ? 15 : 5);
+  MAP = L.map("map", mapOpts()).setView(start ? [start.lat, start.lon] : [36.5, -86.5], start ? 15 : 5);
   LAYERS = {
     sat: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Imagery © Esri, Maxar, Earthstar Geographics" }),
     map: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap contributors" })
   };
-  LAYERS.sat.addTo(MAP);
+  LAYERS.sat.addTo(MAP); twoFingerHint("map");
   if (start) setPending(start.lat, start.lon, "pin");
   MAP.on("click", ev => setPending(ev.latlng.lat, ev.latlng.lng, "pin"));
   setTimeout(() => MAP.invalidateSize(), 80);
@@ -252,7 +267,7 @@ function openAdd(editProp) {
   $("addPanel").hidden = false; $("addTitle").textContent = editProp ? `Move the pin for ${editProp.name}` : "Add your hunting land";
   $("propName").value = editProp ? editProp.name : ""; $("savePropBtn").textContent = editProp ? "Save new location" : "Save property";
   $("savePropBtn").disabled = !PENDING; $("pinned").hidden = !PENDING; if (PENDING) $("pinnedTxt").textContent = `${PENDING.lat.toFixed(5)}, ${PENDING.lon.toFixed(5)}`;
-  showTab("map"); $("addPanel").scrollIntoView({ block: "start", behavior: "smooth" });
+  showTab("map"); renderSampleBanner(); $("jumpScores").hidden = false; $("addPanel").scrollIntoView({ block: "start", behavior: "smooth" });
 }
 function showTab(k) {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === k ? "true" : "false"));
@@ -261,7 +276,12 @@ function showTab(k) {
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => showTab(t.dataset.tab));
 $("addPropBtn").onclick = () => openAdd(null);
-$("addClose").onclick = () => { $("addPanel").hidden = true; };
+function closeAdd() { $("addPanel").hidden = true; $("jumpScores").hidden = true; renderSampleBanner(); }
+$("addClose").onclick = closeAdd;
+$("jumpScores").onclick = () => { $("bug").scrollIntoView({ block: "start", behavior: "smooth" }); };
+try {
+  new IntersectionObserver(es => { es.forEach(e => { if (!$("addPanel").hidden) $("jumpScores").hidden = !e.isIntersecting; }); }, { threshold: 0.15 }).observe($("addPanel"));
+} catch (e) {}
 $("coordIn").addEventListener("input", () => {
   const v = $("coordIn").value.trim(); if (!v) { $("coordMsg").textContent = ""; return; }
   const c = parseCoords(v);
@@ -297,9 +317,9 @@ $("mapSearch").addEventListener("submit", async e => {
 $("savePropBtn").onclick = () => {
   if (!PENDING) return;
   const name = ($("propName").value.trim() || "My hunting land").slice(0, 40);
-  if (EDITING) { Object.assign(EDITING, { lat: PENDING.lat, lon: PENDING.lon, name }); saveProps(); $("addPanel").hidden = true; selectProp(EDITING); toast("Location updated"); return; }
+  if (EDITING) { Object.assign(EDITING, { lat: PENDING.lat, lon: PENDING.lon, name }); saveProps(); closeAdd(); selectProp(EDITING); toast("Location updated"); return; }
   const p = { id: newId(), name, lat: PENDING.lat, lon: PENDING.lon, rut: "", stands: [] };
-  PROPS.push(p); saveProps(); $("addPanel").hidden = true; selectProp(p); toast(`${name} saved`);
+  PROPS.push(p); saveProps(); closeAdd(); selectProp(p); toast(`${name} saved`);
   setTimeout(() => { $("addStandBox").open = true; $("standCard").scrollIntoView({ block: "start", behavior: "smooth" }); }, 400);
 };
 
@@ -309,7 +329,7 @@ async function initStandMap() {
   if (SMAP) return SMAP;
   let L; try { L = await loadLeaflet(); } catch (e) { $("standHint").hidden = false; $("standHint").textContent = "Map couldn't load"; return null; }
   if (SMAP) return SMAP;
-  SMAP = L.map("standMap", { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
+  SMAP = L.map("standMap", { ...mapOpts(), scrollWheelZoom: false }); twoFingerHint("standMap");
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Imagery © Esri, Maxar, Earthstar Geographics" }).addTo(SMAP);
   SLAYER = L.layerGroup().addTo(SMAP);
   SMAP.on("click", ev => { if ($("addStandBox").open && !PROP.sample && !PROP.shared) placeNewStand(ev.latlng.lat, ev.latlng.lng); });
@@ -632,7 +652,7 @@ if (shared) {
   }
 } else {
   const sel = store.get("sel", null), p = PROPS.find(x => x.id === sel) || PROPS[0];
-  if (p) selectProp(p); else { PROP = SAMPLE; renderPropSelect(); load(); setTimeout(() => openAdd(null), 300); }
+  if (p) selectProp(p); else { PROP = SAMPLE; renderPropSelect(); load(); }
 }
 checkStandForm();
 setInterval(() => { if (PROP && !document.hidden) load({ keepDay: true }); }, 60 * 60 * 1000);
