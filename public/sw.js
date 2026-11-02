@@ -1,5 +1,5 @@
 // Rut Score service worker: offline app shell, cached forecasts, and hunt alerts.
-const SHELL = "rutscore-shell-v5";
+const SHELL = "rutscore-shell-v6";
 const DATA = "rutscore-data-v1";
 const FILES = ["/", "/app.css", "/app.js", "/engine.js", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
@@ -41,7 +41,16 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Static files: cached copy right away, refreshed in the background.
+  // App code and styles: network first so updates show right away; cached copy when offline.
+  if (/\.(js|css|webmanifest)$/.test(url.pathname)) {
+    e.respondWith(
+      fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(SHELL).then(c => c.put(req, copy)); } return r; })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Images: cached copy right away, refreshed in the background.
   e.respondWith(
     caches.match(req).then(hit => {
       const net = fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(SHELL).then(c => c.put(req, copy)); } return r; }).catch(() => hit);

@@ -120,7 +120,8 @@ window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();win
   </section>
 
   <section class="standcard" id="standCard">
-    <div class="sec-h"><h2>Which stand?</h2><span class="lbl" id="standWindLbl"></span></div>
+    <div class="sec-h"><h2>Which stand?</h2><button class="infobtn" id="standInfo" type="button">ⓘ How it works</button></div>
+    <div class="lbl standwind" id="standWindLbl"></div>
     <div class="howto" id="standHowto" hidden>
       <div class="howhead"><b>How it works</b><button class="tipx" id="howtoClose" type="button" aria-label="Hide how it works">✕</button></div>
       <ol>
@@ -258,6 +259,18 @@ window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();win
 </div>
 
 <button class="jumppill" id="jumpScores" type="button" hidden>⬇ See the scores</button>
+<div class="sheetback" id="standBack" hidden></div>
+<div class="tip installsheet standsheet" id="standSheet" hidden role="dialog" aria-modal="true" aria-labelledby="standSheetTitle">
+  <div class="tiphead"><b id="standSheetTitle">Which stand should I hunt?</b><button class="tipx" id="standSheetClose" type="button" aria-label="Close">✕</button></div>
+  <p>Deer smell you long before they see you. The right stand is the one where today's wind carries your scent <b>away</b> from where deer come from.</p>
+  <ol>
+    <li><b>Pin each stand</b> on the satellite map.</li>
+    <li><b>Point the arrow</b> toward where deer show up when you sit there: a trail, field edge or creek crossing. Or stand in it and use <b>Set from my phone</b>.</li>
+    <li><b>Rut Score checks the wind</b> at prime time and tells you which stand to hunt.</li>
+  </ol>
+  <div class="legendrow"><span><i style="background:var(--good)"></i>Good wind: scent blows away from deer</span><span><i style="background:var(--fair)"></i>Crosswind: OK, watch your downwind side</span><span><i style="background:var(--bad)"></i>Bad wind: deer will smell you</span></div>
+  <button class="btn big" id="standSheetGo" type="button">Got it</button>
+</div>
 <script type="module" src="/app.js"></script>
 </body>
 </html>

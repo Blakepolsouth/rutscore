@@ -83,6 +83,16 @@ function renderHowto() {
   $("howtoNote").textContent = PROP.sample ? "This sample land has 3 stands so you can see it in action. Add your own land to set up yours." : "Start below: name your first stand, then tap the map where it is.";
 }
 $("howtoClose").onclick = () => { store.set("howtoHidden", true); $("standHowto").hidden = true; };
+function standSheet(show) { $("standSheet").hidden = !show; $("standBack").hidden = !show; if (show) store.set("standSheetSeen", true); }
+$("standInfo").onclick = () => standSheet(true);
+$("standSheetClose").onclick = () => standSheet(false);
+$("standBack").onclick = () => standSheet(false);
+$("standSheetGo").onclick = () => { standSheet(false); if (PROP && !PROP.sample && !PROP.shared && !(PROP.stands || []).length) { $("addStandBox").open = true; $("standName").focus(); } };
+try {
+  new IntersectionObserver((es, obs) => {
+    es.forEach(e => { if (e.isIntersecting && !store.get("standSheetSeen", false) && $("addPanel").hidden) { obs.disconnect(); setTimeout(() => standSheet(true), 600); } });
+  }, { threshold: 0.5 }).observe($("standPick"));
+} catch (e) {}
 function renderStand(D, w) {
   renderHowto();
   const stands = PROP.stands || [], pick = $("standPick"), list = $("standList");
