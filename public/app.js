@@ -76,7 +76,15 @@ function arrowSVG(deg) {
     <g transform="rotate(${to} 32 32)"><path d="M32 12 L40 30 L34 28 L34 50 L30 50 L30 28 L24 30 Z" fill="var(--gold)"/></g></svg>`;
 }
 let LAST_RATED = null, LAST_WIND = null;
+function renderHowto() {
+  const own = !PROP.sample && !PROP.shared, hasStands = (PROP.stands || []).length > 0;
+  const show = !store.get("howtoHidden", false) && (PROP.sample || (own && !hasStands));
+  $("standHowto").hidden = !show;
+  $("howtoNote").textContent = PROP.sample ? "This sample land has 3 stands so you can see it in action. Add your own land to set up yours." : "Start below: name your first stand, then tap the map where it is.";
+}
+$("howtoClose").onclick = () => { store.set("howtoHidden", true); $("standHowto").hidden = true; };
 function renderStand(D, w) {
+  renderHowto();
   const stands = PROP.stands || [], pick = $("standPick"), list = $("standList");
   const wind = w.start ? windDuring(D, w) : { deg: D.summary.wdir, mph: D.summary.wind };
   LAST_WIND = wind;

@@ -296,3 +296,9 @@ details.more > div{margin-top:10px;display:flex;flex-direction:column;gap:10px}
 .top{min-width:0}
 .addphone{flex:none}
 @media (max-width:400px){.live{display:none}}
+
+.howto{background:var(--panel-2);border:1px solid var(--gold);border-radius:6px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.howhead{display:flex;justify-content:space-between;align-items:center}
+.howhead b{font-family:var(--f-label);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-size:14px}
+.howto ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px;font-size:15px}
+.howto ol b{font-family:var(--f-label);font-weight:800;letter-spacing:.02em;font-size:16px}
