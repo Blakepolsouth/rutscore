@@ -635,17 +635,23 @@ async function alertOff(a) {
 let deferred = null;
 function installSteps() {
   if (isIOS) return `<ol><li>Tap the <b>Share</b> button at the bottom of Safari: the square with the arrow pointing up.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>`;
-  if (isAndroid) return `<ol><li>Tap the <b>⋮</b> menu at the top right of Chrome.</li><li>Tap <b>Install app</b> (not "Add to Home screen").</li><li>Tap <b>Install</b>.</li></ol>`;
+  if (isAndroid) return `<ol><li>Tap the <b>⋮</b> menu at the top right of Chrome.</li><li>Tap <b>Add to Home screen</b>, then choose <b>Install</b> (or tap <b>Install app</b> if you see it).</li><li>Tap <b>Install</b>. Rut Score appears on your home screen and in your apps.</li></ol>`;
   return `<ol><li>On your phone, open <b>rutscore.com</b>.</li><li>iPhone: tap Share, then <b>Add to Home Screen</b>. Android: tap ⋮, then <b>Install app</b>.</li><li>On this computer, Chrome and Edge show an install icon at the right end of the address bar.</li></ol>`;
 }
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; if (!standalone) $("installBtn").hidden = false; });
-window.addEventListener("appinstalled", () => { $("installBtn").hidden = true; $("installTip").hidden = true; toast("Rut Score added to your phone"); });
+window.addEventListener("appinstalled", () => { $("installBtn").hidden = true; showInstallSheet(false); toast("Rut Score added to your phone"); });
 if (!standalone) $("installBtn").hidden = false;
+function showInstallSheet(show) { $("installSteps").innerHTML = installSteps(); $("installTip").hidden = !show; $("installBack").hidden = !show; }
 $("installBtn").onclick = async () => {
-  if (deferred) { const d = deferred; deferred = null; d.prompt(); const r = await d.userChoice.catch(() => null); if (r && r.outcome === "accepted") $("installBtn").hidden = true; return; }
-  const tip = $("installTip"); $("installSteps").innerHTML = installSteps(); tip.hidden = !tip.hidden;
+  if (deferred) {
+    const d = deferred; deferred = null;
+    try { await d.prompt(); const r = await d.userChoice; if (r && r.outcome === "accepted") { $("installBtn").hidden = true; return; } if (r && r.outcome === "dismissed") return; }
+    catch (e) { /* Chrome refused the prompt: fall through to the steps */ }
+  }
+  showInstallSheet(true);
 };
-$("installClose").onclick = () => { $("installTip").hidden = true; };
+$("installClose").onclick = () => showInstallSheet(false);
+$("installBack").onclick = () => showInstallSheet(false);
 if ("serviceWorker" in navigator && !PREVIEW) navigator.serviceWorker.register(new URL("sw.js", import.meta.url), { scope: "/" }).catch(() => {});
 
 /* ───────── Start ───────── */
