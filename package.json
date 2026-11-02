@@ -1,0 +1,9 @@
+{
+  "name": "rutscore",
+  "private": true,
+  "type": "module",
+  "description": "Rut Score: will deer move today?",
+  "scripts": { "build": "node -e \"console.log('Rut Score ready')\"" },
+  "dependencies": { "@netlify/blobs": "^8.1.0", "web-push": "^3.6.7" },
+  "engines": { "node": ">=20" }
+}

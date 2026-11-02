@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rut Score</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="How hot is the rut, and will deer move today? A Rut Score and a 1–10 Hunt Score for your own hunting land, the best time to hunt, which stand fits the wind, and the 7-day outlook.">
+<meta name="theme-color" content="#14170f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rut Score">
+<link rel="canonical" href="https://rutscore.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rutscore.com/">
+<meta property="og:title" content="Rut Score: how hot is the rut on your land?">
+<meta property="og:description" content="Rut Score and Hunt Score for your own hunting land, the best time to hunt, and which stand fits today's wind. Free.">
+<meta property="og:image" content="https://rutscore.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="brand">
+      <b>Rut<span>Score</span></b>
+      <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
+    </div>
+    <button class="addphone" id="installBtn" type="button" hidden aria-label="Get the free Rut Score app on your phone">
+      <svg class="appicon" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#14170f"/><path d="M5 19h22l-2 6H3z" fill="#ff6a13"/><text x="16" y="15" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="11" fill="#efe9da">RUT</text></svg>
+      <span class="addtxt">Get the app<small>Free · 1 tap</small></span>
+    </button>
+  </header>
+  <div class="tip" id="installTip" hidden>
+    <div class="tiphead"><b>Get Rut Score on your home screen</b><button class="tipx" id="installClose" type="button" aria-label="Close">✕</button></div>
+    <div id="installSteps"></div>
+  </div>
+
+  <section class="propbar" id="propbar">
+    <label class="lbl" for="propSelect">Property</label>
+    <div class="propsel">
+      <select id="propSelect" aria-label="Choose a property"></select>
+      <button class="btn" id="addPropBtn" type="button">＋ Add land</button>
+    </div>
+  </section>
+
+  <div class="banner" id="sharedBanner" hidden>
+    <span id="sharedTxt"></span>
+    <div class="bannerbtns"><button class="btn" id="sharedSave" type="button">Save property</button><button class="btn ghost" id="sharedDismiss" type="button">Not now</button></div>
+  </div>
+
+  <section class="panel" id="addPanel" hidden>
+    <div class="sec-h" style="border:0;padding:0"><h2 id="addTitle">Add your hunting land</h2><button class="tipx" id="addClose" type="button" aria-label="Close">✕</button></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="map" type="button">🗺 Drop a pin</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="coords" type="button">📋 Paste coordinates</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="here" type="button">📍 I'm on it</button>
+    </div>
+    <div class="tabpane" data-pane="map">
+      <form class="searchrow" id="mapSearch" autocomplete="off">
+        <input id="mapQ" type="search" placeholder="Jump to a town, county or road" aria-label="Jump to a town, county or road">
+        <button class="btn" type="submit">Go</button>
+      </form>
+      <div class="list results" id="mapResults" hidden></div>
+      <div class="mapwrap"><div id="map" aria-label="Map. Tap to drop a pin on your land."></div><div class="maphint" id="mapHint">Tap your land to drop a pin</div></div>
+      <div class="maptoggle"><button class="chipbtn" id="layerSat" type="button" aria-pressed="true">Satellite</button><button class="chipbtn" id="layerMap" type="button" aria-pressed="false">Map</button></div>
+    </div>
+    <div class="tabpane" data-pane="coords" hidden>
+      <label class="lbl" for="coordIn">Coordinates or a map link</label>
+      <input id="coordIn" class="field" type="text" inputmode="text" placeholder="32.8407, -83.6324" autocomplete="off">
+      <p class="note">Works with onX, Google Maps, Apple Maps or a GPS. Decimal, degrees-minutes-seconds and Google Maps links all work.</p>
+      <p class="note" id="coordMsg"></p>
+    </div>
+    <div class="tabpane" data-pane="here" hidden>
+      <p class="note">Standing on your property? Save your exact spot.</p>
+      <button class="btn ghost" id="hereBtn" type="button">📍 Use my exact location</button>
+      <p class="note" id="hereMsg"></p>
+    </div>
+    <div class="pinned" id="pinned" hidden>📌 <span id="pinnedTxt"></span></div>
+    <label class="lbl" for="propName">Name this property</label>
+    <input id="propName" class="field" type="text" maxlength="40" placeholder="Georgia lease" autocomplete="off">
+    <button class="btn big" id="savePropBtn" type="button" disabled>Save property</button>
+  </section>
+
+  <section class="bug loading" id="bug" aria-live="polite">
+    <div class="bug-head">
+      <div class="place" id="bugPlace">Loading forecast</div>
+      <span class="tzlbl" id="tzLbl"></span>
+    </div>
+    <div class="bug-body">
+      <div class="scorecol"><span class="lbl scorelbl">Hunt Score</span><div class="score" id="score">–<sup>/10</sup></div></div>
+      <div class="side">
+        <div class="dayname" id="dayName">Today</div>
+        <div class="verdict" id="verdict"><span>Warming up</span></div>
+        <button class="rutbadge" id="rutBadge" type="button" aria-label="Rut Score"><b id="rutNum">–</b><span><em>Rut Score</em><small id="rutName">Checking</small></span></button>
+        <div class="prime">
+          <span class="lbl" id="primeLbl">Prime time</span>
+          <b id="prime">–</b>
+          <small id="primeNote"></small>
+        </div>
+      </div>
+    </div>
+    <div class="alert" id="alert" hidden></div>
+    <p class="why" id="why">Checking temperature, pressure, wind and the moon for your land.</p>
+  </section>
+
+  <section class="standcard" id="standCard">
+    <div class="sec-h"><h2>Which stand?</h2><span class="lbl" id="standWindLbl"></span></div>
+    <div class="standpick" id="standPick"></div>
+    <div class="mapwrap standmapwrap" id="standMapWrap">
+      <div id="standMap" aria-label="Map of your stands, colored for today's wind"></div>
+      <div class="maphint" id="standHint" hidden></div>
+      <div class="maplegend" id="mapLegend"><span><i style="background:var(--good)"></i>Good wind</span><span><i style="background:var(--fair)"></i>Crosswind</span><span><i style="background:var(--bad)"></i>Bad wind</span></div>
+    </div>
+    <div class="stands" id="standList"></div>
+    <details class="more" id="addStandBox">
+      <summary>Add a stand or blind</summary>
+      <div>
+        <div class="step"><b>1</b><span>Name it</span></div>
+        <input id="standName" class="field" type="text" maxlength="30" placeholder="Creek stand" autocomplete="off" aria-label="Stand name">
+        <div class="step"><b>2</b><span>Tap the map where the stand is</span></div>
+        <p class="note" id="placeMsg">Tap the satellite map above. You can drag the pin to fine-tune. Skip this if you'd rather not pin it.</p>
+        <div class="step"><b>3</b><span>Which way do deer come from?</span></div>
+        <p class="note">Point toward where deer usually show up when you sit there: the trail, field edge or creek crossing you watch.</p>
+        <div class="dirmethods">
+          <div class="dirmethod" id="arrowMethod">
+            <b>Drag the arrow</b>
+            <span class="note">Once the stand is pinned, drag the orange arrow tip on the map toward where deer come from.</span>
+          </div>
+          <div class="dirmethod">
+            <b>Point your phone</b>
+            <span class="note">Sitting in the stand? Hold your phone flat and point the top toward where deer come from.</span>
+            <button class="btn ghost" id="compassBtn" type="button">📱 Set from my phone</button>
+            <span class="compassread" id="compassRead" hidden></span>
+          </div>
+          <div class="dirmethod">
+            <b>Or tap a direction</b>
+            <div class="dirpick" id="dirPick" role="radiogroup" aria-label="Direction deer come from"></div>
+          </div>
+        </div>
+        <div class="dirresult" id="dirResult">Deer come from: <b id="dirVal">not set</b></div>
+        <button class="btn big" id="saveStandBtn" type="button" disabled>Save stand</button>
+        <button class="btn ghost" id="cancelStandBtn" type="button" hidden>Cancel editing</button>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>This week</h2><span class="lbl" id="bestDay">Tap a day</span></div>
+    <div class="week" id="week"></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Hunt clock</h2><span class="lbl" id="clockLbl">Shooting light</span></div>
+    <div class="clock"><svg id="chart" viewBox="0 0 380 132" role="img" aria-label="Hourly deer movement during legal shooting light"></svg></div>
+    <div class="times" id="times"></div>
+    <div class="legend">
+      <div><b>Legal light</b> Typical shooting hours: 30 minutes before sunrise to 30 minutes after sunset. Your state's rules may differ, so check them.</div>
+      <div><b>Prime</b> The best stretch of the day to be in the stand.</div>
+      <div><b>Major / Minor</b> Moon overhead or underfoot, and moonrise or moonset. Many hunters watch these for extra movement.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Stat sheet</h2><span class="lbl">Grade</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="rutrow">
+      <label class="lbl" for="rutSel">Rut on this property</label>
+      <select id="rutSel">
+        <option value="">Estimate for me</option>
+        <option value="pre">Pre-rut</option>
+        <option value="chasing">Seeking &amp; chasing</option>
+        <option value="peak">Peak breeding</option>
+        <option value="post">Post-rut</option>
+        <option value="none">No rut</option>
+      </select>
+    </div>
+    <p class="note" id="rutNote"></p>
+  </section>
+
+  <section class="actions">
+    <button class="btn big" id="shareBtn" type="button">🦌 Send to the hunting camp</button>
+    <div class="sharebox" id="shareBox" hidden>
+      <div class="lbl">Send it to your crew</div>
+      <div class="sharegrid">
+        <a class="shbtn" id="shSms" href="#">💬 Text</a>
+        <a class="shbtn" id="shWa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="shbtn" id="shFb" href="#" target="_blank" rel="noopener">Facebook</a>
+        <a class="shbtn" id="shX" href="#" target="_blank" rel="noopener">X</a>
+        <a class="shbtn" id="shMail" href="#">✉️ Email</a>
+        <button class="shbtn" id="shImg" type="button">🖼 Save image</button>
+      </div>
+      <label class="lbl" for="shareText">Or copy the message</label>
+      <textarea id="shareText" readonly></textarea>
+      <div class="sharecopy"><button class="btn ghost" id="copyBtn" type="button">Copy message</button><button class="btn ghost" id="copyLink" type="button">Copy link</button></div>
+    </div>
+    <p class="note">The link includes your property and stands, so everyone on the lease can save it with one tap.</p>
+  </section>
+
+  <section class="panel" id="alertsPanel">
+    <div class="sec-h" style="border:0;padding:0"><h2>Hunt alerts</h2><span class="lbl">Free</span></div>
+    <p>Get a phone alert when <b id="alertSpot">this property</b> is forecast to hit your number in the next few days.</p>
+    <div class="alertrow">
+      <label class="lbl" for="alertThr">Alert at</label>
+      <select id="alertThr"><option value="7">7 or better</option><option value="8" selected>8 or better</option><option value="9">9 or better</option></select>
+      <button class="btn" id="alertBtn" type="button">🔔 Turn on alerts</button>
+    </div>
+    <p id="alertNote" hidden></p>
+    <div class="alertlist" id="alertList"></div>
+  </section>
+
+  <section class="panel">
+    <details class="more">
+      <summary>Manage this property</summary>
+      <div>
+        <button class="btn ghost" id="renameProp" type="button">Rename</button>
+        <button class="btn ghost" id="moveProp" type="button">Move the pin</button>
+        <button class="btn ghost danger" id="deleteProp" type="button">Delete property</button>
+        <p class="note" id="deleteConfirm" hidden>Delete this property and its stands? <button class="btn ghost danger" id="deleteYes" type="button">Yes, delete</button></p>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <div>Rut Score is a conditions guide, not a guarantee. The Rut Score rates how active the rut is; the Hunt Score weighs the temperature change, barometric pressure trend, wind, rain, sunrise and sunset, the rut, solunar periods and moon phase. Always confirm legal shooting hours and seasons with your state wildlife agency, wear blaze orange where required, and use a safety harness in tree stands.</div>
+    <div>rutscore.com · Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> · Maps © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · Imagery © Esri. Your properties are saved on your phone only.</div>
+  </footer>
+</div>
+
+<div class="chyron" aria-hidden="true">
+  <div class="tag">Hunt Line</div>
+  <div class="run"><div class="track" id="track"><span>Loading conditions</span></div></div>
+</div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
