@@ -18,7 +18,8 @@
 <meta property="og:description" content="Rut Score and Hunt Score for your own hunting land, the best time to hunt, and which stand fits today's wind. Free.">
 <meta property="og:image" content="https://rutscore.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="manifest" href="/manifest.webmanifest">
+<script>/* The installed iPhone app has its own storage, so its start link carries your saved properties along */
+(function(){var c="";try{c=JSON.parse(localStorage.getItem("rs_restore")||'""')||"";}catch(e){}var l=document.createElement("link");l.rel="manifest";l.href=c&&/^[A-Za-z0-9_~-]{1,6000}$/.test(c)?"/app.webmanifest?s="+c:"/manifest.webmanifest";window.__mf=c;document.head.appendChild(l);})();</script>
 <script>/* Catch Chrome's install offer the moment it arrives, before the app finishes loading */
 window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;var b=document.getElementById("installBtn");if(b)b.hidden=false;});</script>
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -41,9 +42,16 @@ window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();win
     </button>
   </header>
   <div class="sheetback" id="installBack" hidden></div>
-  <div class="tip installsheet" id="installTip" hidden role="dialog" aria-modal="true" aria-label="Get Rut Score on your phone">
-    <div class="tiphead"><b>Get Rut Score on your home screen</b><button class="tipx" id="installClose" type="button" aria-label="Close">✕</button></div>
+  <div class="tip installsheet" id="installTip" hidden role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="tiphead"><b id="installTitle">Get Rut Score on your home screen</b><button class="tipx" id="installClose" type="button" aria-label="Close">✕</button></div>
     <div id="installSteps"></div>
+  </div>
+  <div class="pointer" id="installPointer" hidden aria-hidden="true"><svg viewBox="0 0 40 56"><path d="M20 54V6M6 40l14 14 14-14" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="sheetback" id="welcomeBack" hidden></div>
+  <div class="tip installsheet" id="welcomeTip" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="tiphead"><b id="welcomeTitle">You're in. Rut Score is on your phone.</b><button class="tipx" id="welcomeClose" type="button" aria-label="Close">✕</button></div>
+    <p id="welcomeTxt" style="margin:0"></p>
+    <button class="btn" id="welcomeAlerts" type="button">🔔 Turn on hunt alerts</button>
   </div>
 
   <section class="propbar" id="propbar">

@@ -19,7 +19,9 @@ const SAMPLE = { id: "sample", sample: true, name: "Sample land · Middle Georgi
 let PROPS = store.get("props", []), PROP = null, MODEL = null, SEL = 0, DEMO = false, SHARED = null;
 const fmtT = (ms, short) => fT(ms, MODEL ? MODEL.tz : "UTC", short);
 const fmtRange = (a, b) => fR(a, b, MODEL ? MODEL.tz : "UTC");
-const saveProps = () => store.set("props", PROPS);
+const saveProps = () => { store.set("props", PROPS); saveRestore(); };
+/* Code for the installed app's start link (iPhone keeps Home Screen apps' storage separate from Safari) */
+function saveRestore() { try { const c = PROPS.filter(p => !p.sample && !p.shared).slice(0, 6).map(encodeProperty).join("~"); store.set("restore", c); const l = document.querySelector('link[rel="manifest"]'); if (l) l.href = c ? "/app.webmanifest?s=" + c : "/manifest.webmanifest"; } catch (e) {} }
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 /* ───────── Property picker ───────── */
@@ -612,7 +614,7 @@ function renderAlerts() {
   });
   if (PROP.sample) alertNote("Add your own land first, then turn on alerts for it.");
   else if (PREVIEW) alertNote("Alerts work once Rut Score is live at rutscore.com.");
-  else if (isIOS && !standalone) alertNote("On iPhone, add Rut Score to your Home Screen first (Share, then Add to Home Screen), then open it from there to turn on alerts.");
+  else if (isIOS && !standalone) alertNote("On iPhone, alerts work once Rut Score is on your Home Screen. Tap the button and we'll show you how. It takes about 10 seconds.");
   else if (!pushSupported()) alertNote("This browser can't show alerts. Try Chrome, Edge, Firefox, or Safari from your Home Screen.");
   else alertNote("");
 }
@@ -623,6 +625,7 @@ async function pushSub() {
   return sub;
 }
 $("alertBtn").onclick = async () => {
+  if (isIOS && !standalone && PROP && !PROP.sample) { showInstallSheet(true, "alerts"); return; }
   if (!PROP || PROP.sample || PREVIEW || !pushSupported() || (isIOS && !standalone)) { renderAlerts(); return; }
   const btn = $("alertBtn"); btn.disabled = true;
   try {
@@ -641,17 +644,52 @@ async function alertOff(a) {
   store.set("alerts", alertsLocal().filter(x => x.key !== a.key)); toast(`Alerts off for ${a.name}`); renderAlerts();
 }
 
-/* ───────── Install ("Get the app") ───────── */
+/* ───────── Install ("Get the app") ─────────
+   iPhone can't install a web app in one tap, so we show the exact button for this phone with an arrow pointing at it. */
 let deferred = window.__bip || null;
-function installSteps() {
-  if (isIOS) return `<ol><li>Tap the <b>Share</b> button at the bottom of Safari: the square with the arrow pointing up.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>`;
-  if (isAndroid) return `<ol><li>Tap the <b>⋮</b> menu at the top right of Chrome.</li><li>Tap <b>Add to Home screen</b>, then choose <b>Install</b> (or tap <b>Install app</b> if you see it).</li><li>Tap <b>Install</b>. Rut Score appears on your home screen and in your apps.</li></ol>`;
-  return `<ol><li>On your phone, open <b>rutscore.com</b>.</li><li>iPhone: tap Share, then <b>Add to Home Screen</b>. Android: tap ⋮, then <b>Install app</b>.</li><li>On this computer, Chrome and Edge show an install icon at the right end of the address bar.</li></ol>`;
+const UA = navigator.userAgent;
+const IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Line\/|Snapchat|TikTok|musical_ly|LinkedInApp|Twitter|Pinterest|GSA\//.test(UA);
+const IOS_BROWSER = /CriOS/.test(UA) ? "chrome" : /FxiOS/.test(UA) ? "firefox" : /EdgiOS/.test(UA) ? "edge" : "safari";
+const SAFARI_V = +((UA.match(/Version\/(\d+)/) || [])[1] || 0), IPAD = /iPad/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const ICONS = {
+  share: '<svg viewBox="0 0 24 24" class="ico"><path d="M12 3v12M7 8l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11H5v10h14V11h-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  dots: '<svg viewBox="0 0 24 24" class="ico"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>',
+  add: '<svg viewBox="0 0 24 24" class="ico"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+const step = (n, html) => `<li class="istep"><span class="inum">${n}</span><span>${html}</span></li>`;
+function guide(reason) {
+  const why = reason === "alerts" ? `<p class="iwhy">iPhone only sends alerts to apps on your Home Screen. Two taps and you're set, and your saved land comes with you.</p>` : `<p class="iwhy">Free, no App Store, about 10 seconds. Your saved land comes with you.</p>`;
+  if (isIOS && IN_APP) return { html: `${why}<ol class="isteps">${step(1, `This page is open inside another app, which can't add it to your Home Screen. Tap <b>Copy link</b> below.`)}${step(2, `Open <b>Safari</b>, paste the link, then tap <b>Get the app</b> again.`)}</ol><button class="btn" type="button" id="icopy">Copy link</button>`, arrow: null };
+  if (isIOS && IOS_BROWSER !== "safari") {
+    const where = IOS_BROWSER === "chrome" ? `the ${ICONS.share} <b>Share</b> button in the address bar` : `the <b>menu</b> button, then ${ICONS.share} <b>Share</b>`;
+    return { html: `${why}<ol class="isteps">${step(1, `Tap ${where}.`)}${step(2, `Tap ${ICONS.add} <b>Add to Home Screen</b>, then <b>Add</b>.`)}</ol><p class="inote">Don't see it? Open this page in Safari instead.</p>`, arrow: IOS_BROWSER === "chrome" ? "topright" : "bottomright" };
+  }
+  if (isIOS) {
+    const new26 = SAFARI_V >= 26;
+    const first = new26 ? `Tap ${ICONS.dots} next to the address bar, then tap ${ICONS.share} <b>Share</b>.` : `Tap ${ICONS.share} <b>Share</b> ${IPAD ? "at the top" : "at the bottom of the screen"}.`;
+    return { html: `${why}<ol class="isteps">${step(1, first)}${step(2, `Scroll down, tap ${ICONS.add} <b>Add to Home Screen</b>${new26 ? `, keep <b>Open as Web App</b> on,` : ""} then tap <b>Add</b>.`)}${step(3, `Open <b>Rut Score</b> from your Home Screen.`)}</ol>${new26 ? `<p class="inote">If you see ${ICONS.share} Share right in the toolbar, tap that instead.</p>` : ""}`,
+      arrow: IPAD ? "topright" : new26 ? "bottomright" : "bottom" };
+  }
+  if (isAndroid) return { html: `<ol class="isteps">${step(1, `Tap the <b>⋮</b> menu at the top right of Chrome.`)}${step(2, `Tap <b>Install app</b> or <b>Add to Home screen</b>, then <b>Install</b>.`)}</ol>`, arrow: "topright" };
+  return { html: `<ol class="isteps">${step(1, `On your phone, open <b>rutscore.com</b> and tap <b>Get the app</b>.`)}${step(2, `On this computer, Chrome and Edge show an install icon at the right end of the address bar.`)}</ol>`, arrow: null };
 }
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; window.__bip = e; if (!standalone) $("installBtn").hidden = false; });
 window.addEventListener("appinstalled", () => { $("installBtn").hidden = true; showInstallSheet(false); toast("Rut Score added to your phone"); });
 if (!standalone) $("installBtn").hidden = false;
-function showInstallSheet(show) { $("installSteps").innerHTML = installSteps(); $("installTip").hidden = !show; $("installBack").hidden = !show; }
+function showInstallSheet(show, reason) {
+  const ptr = $("installPointer");
+  if (show) {
+    // Make sure the installed app starts with this phone's saved land (reload once if it changed since the page opened)
+    const want = store.get("restore", "") || "";
+    if (isIOS && !IN_APP && want !== (window.__mf || "")) { try { sessionStorage.setItem("rs_reopen", reason || "1"); } catch (e) {} location.reload(); return; }
+    const g = guide(reason);
+    $("installTitle").textContent = reason === "alerts" ? "Turn on alerts: add Rut Score to your Home Screen" : "Get Rut Score on your home screen";
+    $("installSteps").innerHTML = g.html;
+    ptr.className = "pointer " + (g.arrow || ""); ptr.hidden = !g.arrow;
+    const c = $("icopy"); if (c) c.onclick = () => copyText(location.origin + "/", "Link copied. Now open Safari and paste it.");
+  } else ptr.hidden = true;
+  $("installTip").hidden = !show; $("installBack").hidden = !show;
+}
 $("installBtn").onclick = async () => {
   if (deferred) {
     const d = deferred; deferred = null; window.__bip = null;
@@ -662,6 +700,36 @@ $("installBtn").onclick = async () => {
 };
 $("installClose").onclick = () => showInstallSheet(false);
 $("installBack").onclick = () => showInstallSheet(false);
+try { const r = sessionStorage.getItem("rs_reopen"); if (r) { sessionStorage.removeItem("rs_reopen"); setTimeout(() => showInstallSheet(true, r === "alerts" ? "alerts" : undefined), 500); } } catch (e) {}
+
+/* First launch from the Home Screen: bring saved land over from Safari, then offer alerts */
+function restoreFromInstall() {
+  let codes = ""; try { codes = new URLSearchParams(location.search).get("restore") || ""; } catch (e) {}
+  if (!codes) return false;
+  let added = 0;
+  codes.split("~").slice(0, 6).forEach(c => {
+    const p = decodeProperty(c); if (!p) return;
+    if (PROPS.some(x => Math.abs(x.lat - p.lat) < 1e-4 && Math.abs(x.lon - p.lon) < 1e-4)) return;
+    PROPS.push({ id: newId(), name: p.name, lat: p.lat, lon: p.lon, rut: p.rut || "", stands: p.stands || [] }); added++;
+  });
+  if (added) saveProps();
+  try { history.replaceState(null, "", "/"); } catch (e) {}
+  return true;
+}
+const FROM_INSTALL = restoreFromInstall();
+function welcome(show) { $("welcomeTip").hidden = !show; $("welcomeBack").hidden = !show; }
+if (standalone && !store.get("welcomed", false)) {
+  store.set("welcomed", true);
+  const own = PROPS.filter(p => !p.sample);
+  setTimeout(() => {
+    $("welcomeTxt").textContent = own.length ? `${own.length === 1 ? own[0].name + " is" : own.length + " properties are"} here and ready. Want a heads-up when the deer are forecast to move?` : "Add your hunting land, then turn on alerts to get a heads-up when deer are forecast to move.";
+    $("welcomeAlerts").textContent = own.length ? "🔔 Turn on hunt alerts" : "Add my land";
+    welcome(true);
+  }, 900);
+}
+$("welcomeClose").onclick = () => welcome(false);
+$("welcomeBack").onclick = () => welcome(false);
+$("welcomeAlerts").onclick = () => { welcome(false); if (!PROPS.some(p => !p.sample)) { openAdd(null); return; } $("alertsPanel").scrollIntoView({ behavior: "smooth", block: "center" }); $("alertBtn").click(); };
 if ("serviceWorker" in navigator && !PREVIEW) navigator.serviceWorker.register(new URL("sw.js", import.meta.url), { scope: "/" }).catch(() => {});
 
 /* ───────── Start ───────── */
@@ -679,6 +747,7 @@ if (shared) {
   if (p) selectProp(p); else { PROP = SAMPLE; renderPropSelect(); load(); }
 }
 try { if (new URLSearchParams(location.search).has("add")) { setTimeout(() => openAdd(null), 400); history.replaceState(null, "", "/"); } } catch (e) {}
+if (!store.get("restore", null) && PROPS.some(p => !p.sample)) saveRestore();
 checkStandForm();
 setInterval(() => { if (PROP && !document.hidden) load({ keepDay: true }); }, 60 * 60 * 1000);
 window.__rut = { buildModel };
