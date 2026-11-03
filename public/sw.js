@@ -1,5 +1,5 @@
 // Rut Score service worker: offline app shell, cached forecasts, and hunt alerts.
-const SHELL = "rutscore-shell-v6";
+const SHELL = "rutscore-shell-v7";
 const DATA = "rutscore-data-v1";
 const FILES = ["/", "/app.css", "/app.js", "/engine.js", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 

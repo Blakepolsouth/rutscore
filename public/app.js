@@ -678,6 +678,7 @@ if (shared) {
   const sel = store.get("sel", null), p = PROPS.find(x => x.id === sel) || PROPS[0];
   if (p) selectProp(p); else { PROP = SAMPLE; renderPropSelect(); load(); }
 }
+try { if (new URLSearchParams(location.search).has("add")) { setTimeout(() => openAdd(null), 400); history.replaceState(null, "", "/"); } } catch (e) {}
 checkStandForm();
 setInterval(() => { if (PROP && !document.hidden) load({ keepDay: true }); }, 60 * 60 * 1000);
 window.__rut = { buildModel };

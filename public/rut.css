@@ -1,0 +1,41 @@
+/* State rut pages — built on the Rut Score scoreboard system */
+.crumbs{font-family:var(--f-label);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--muted)}
+.crumbs a{color:var(--gold);text-decoration:none}
+.rutpage{display:flex;flex-direction:column;gap:14px;font-size:16px;line-height:1.55}
+.rutpage h1{margin:0;font-family:var(--f-board);font-weight:900;font-size:clamp(32px,9vw,44px);line-height:1;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.rutpage h2{margin:10px 0 0;font-family:var(--f-board);font-weight:800;font-size:24px;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line);padding-bottom:6px}
+.rutpage p{margin:0;max-width:65ch}
+.rutpage a{color:var(--gold)}
+.lede{font-size:17px}
+.rutnow{display:flex;align-items:center;gap:14px;background:var(--panel);border:2px solid var(--rut,var(--gold));border-radius:8px;padding:12px 14px}
+.rutnow .n{display:grid;place-items:center;min-width:64px;height:64px;border-radius:6px;background:var(--rut,var(--gold));color:var(--ink);font-family:var(--f-board);font-weight:900;font-size:44px;line-height:1}
+.rutnow.varies .n{background:var(--panel-2);color:var(--chalk)}
+.rutnow div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.rutnow em{font-style:normal;font-family:var(--f-label);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--rut,var(--gold))}
+.rutnow .t{font-family:var(--f-board);font-weight:800;font-size:24px;line-height:1.05;text-transform:uppercase}
+.rutnow small{color:var(--muted);font-size:13px}
+.caltable{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.calrow{display:grid;grid-template-columns:120px 112px minmax(0,1fr);gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:start}
+.calrow:last-child{border-bottom:0}
+.calrow.hot{background:rgba(255,106,19,.12);border-left:4px solid var(--gold)}
+.calrow .ph{font-family:var(--f-label);font-weight:800;letter-spacing:.04em;text-transform:uppercase;font-size:15px}
+.calrow .dt{font-family:var(--f-board);font-weight:800;font-size:19px;line-height:1.2;font-variant-numeric:tabular-nums;color:var(--gold)}
+.calrow .ds{font-size:14px;color:var(--muted)}
+@media (max-width:560px){.calrow{grid-template-columns:1fr auto}.calrow .ds{grid-column:1/-1}}
+.zones{display:flex;flex-direction:column;gap:6px}
+.zone{display:flex;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:9px 12px;flex-wrap:wrap}
+.zone b{font-family:var(--f-label);font-weight:800;letter-spacing:.03em}
+.zone span{color:var(--muted)}
+.ctabox{background:linear-gradient(160deg,var(--panel-2),var(--panel));border:2px solid var(--gold);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.ctabox h2{border:0;padding:0;margin:0}
+.faq details{border-bottom:1px solid var(--line);padding:10px 0}
+.faq summary{cursor:pointer;font-family:var(--f-label);font-weight:800;font-size:17px;letter-spacing:.02em}
+.faq p{margin-top:6px;color:var(--muted)}
+.statelist{display:flex;flex-direction:column;gap:6px}
+.staterow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;grid-template-areas:"n nm pk" "n t pk";gap:0 12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--rut,var(--line));border-radius:4px;padding:8px 12px;text-decoration:none;color:var(--chalk)!important}
+.staterow:hover{border-color:var(--gold)}
+.staterow .n{grid-area:n;display:grid;place-items:center;height:40px;border-radius:4px;background:var(--rut,var(--panel-2));color:var(--ink);font-family:var(--f-board);font-weight:900;font-size:26px}
+.staterow.varies .n{color:var(--chalk)}
+.staterow .nm{grid-area:nm;font-family:var(--f-label);font-weight:800;font-size:18px;letter-spacing:.02em}
+.staterow .t{grid-area:t;font-size:13px;color:var(--muted)}
+.staterow .pk{grid-area:pk;font-family:var(--f-label);font-weight:700;font-size:13px;color:var(--muted);text-align:right}
