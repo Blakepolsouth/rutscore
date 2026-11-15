@@ -3,6 +3,7 @@
 import { getStore } from "@netlify/blobs";
 import webpush from "web-push";
 import { vapidKeys } from "../lib/shared.mjs";
+import { planAlerts, wordAlert } from "../lib/plan.mjs";
 import { buildModel, primeFor, tierOf, fetchForecast, fmtRange, DL, keyDate, SITE } from "../../public/engine.js";
 
 async function mapLimit(items, limit, fn) {
@@ -32,21 +33,20 @@ export default async () => {
   await mapLimit(records, 8, async ({ id, rec }) => {
     const d = data.get(rec.spot.lat.toFixed(2) + "," + rec.spot.lon.toFixed(2)); if (!d) return;
     const M = buildModel(d.hourly, d.timezone || "UTC", rec.spot, { rut: rec.spot.rut || null });
-    const todayKey = M.days[0].key;
-    const notified = Object.fromEntries(Object.entries(rec.notified || {}).filter(([k]) => k >= todayKey));
-    const hit = M.days.slice(1, 4).find(day => day.score >= rec.threshold && !notified[day.key]);
-    if (!hit) { if (Object.keys(notified).length !== Object.keys(rec.notified || {}).length) await store.setJSON(id, { ...rec, notified }); return; }
-
-    const dayName = DL[keyDate(hit.key).getUTCDay()], { w } = primeFor(hit);
-    const q = new URLSearchParams(); if (rec.spot.code) q.set("p", rec.spot.code); q.set("d", hit.key);
-    const payload = {
-      title: hit.rut != null ? `🦌 ${rec.spot.name}: Rut ${hit.rut} · Hunt ${hit.score} ${dayName}` : `🦌 ${rec.spot.name}: Hunt Score ${hit.score}/10 ${dayName}`,
-      body: `${tierOf(hit.score).name}.${w.start ? ` Prime ${fmtRange(w.start, w.end, M.tz)}.` : ""} Tap for the full hunt forecast.`,
-      tag: "hunt-" + id + "-" + hit.key, url: "/?" + q.toString()
-    };
+    const plan = planAlerts(M.days, rec);
+    if (!plan.messages.length) { if (plan.changed) await store.setJSON(id, { ...rec, notified: plan.notified }); return; }
     try {
-      await webpush.sendNotification(rec.subscription, JSON.stringify(payload), { TTL: 12 * 3600 });
-      notified[hit.key] = hit.score; sent++; await store.setJSON(id, { ...rec, notified });
+      for (const m of plan.messages) {
+        const words = wordAlert(m, {
+          icon: "🦌", place: rec.spot.name, dayName: k => DL[keyDate(k).getUTCDay()], tierName: s => tierOf(s).name,
+          scoreText: d => d.rut != null ? `Rut ${d.rut} · Hunt ${d.score}` : `Hunt ${d.score}/10`,
+          extra: d => { const { w } = primeFor(d); return w.start ? ` Prime ${fmtRange(w.start, w.end, M.tz)}.` : ""; }
+        });
+        const q = new URLSearchParams(); if (rec.spot.code) q.set("p", rec.spot.code); q.set("d", m.d.key);
+        await webpush.sendNotification(rec.subscription, JSON.stringify({ ...words, tag: `hunt-${id}-${m.d.key}-${m.type}`, url: "/?" + q.toString() }), { TTL: 12 * 3600 });
+        sent++;
+      }
+      await store.setJSON(id, { ...rec, notified: plan.notified });
     } catch (e) { if (e && (e.statusCode === 404 || e.statusCode === 410)) { await store.delete(id); removed++; } }
   });
   console.log(`Hunt alerts: ${records.length} alerts, ${spots.size} locations, ${sent} sent, ${removed} expired removed, ${Date.now() - started} ms`);
