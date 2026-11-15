@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Land Manager · Rut Score</title>
+<meta name="description" content="Food plot seed calculator, attractant rain refresher, spin feeder planner and a feed & plot calendar by state. Free from Rut Score.">
+<meta name="theme-color" content="#14170f">
+<link rel="canonical" href="https://rutscore.com/land/">
+<meta property="og:title" content="Rut Score Land Manager: plots, seed, attractant & feeders">
+<meta property="og:description" content="How much seed for your plot, when rain washed out your attractant, and when your feeder runs dry. Free.">
+<meta property="og:image" content="https://rutscore.com/og.png">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/land/land.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/" aria-label="Back to Rut Score" style="text-decoration:none;color:inherit"><b>Rut<span>Score</span></b></a>
+    <a class="btn ghost" href="/" style="text-decoration:none;padding:8px 12px">← Forecast</a>
+  </header>
+
+  <section class="lhead">
+    <div class="lbl">Land Manager</div>
+    <h1>Plots, seed, attractant & feeders</h1>
+    <div class="propsel"><label class="lbl" for="propSel">Property</label><select id="propSel"></select>
+      <label class="lbl" for="stateSel">State</label><select id="stateSel"></select></div>
+    <p class="legal">Feeding and baiting rules vary by state. Some states ban them or limit hunting near them. Check your state's regulations before you put out feed or attractant.</p>
+  </section>
+
+  <nav class="ltabs" role="tablist" aria-label="Land tools">
+    <button type="button" role="tab" data-t="cal">📅 Calendar</button>
+    <button type="button" role="tab" data-t="seed">🌱 Seed</button>
+    <button type="button" role="tab" data-t="attract">🌧 Attractant</button>
+    <button type="button" role="tab" data-t="feeder">🌽 Feeders</button>
+  </nav>
+
+  <section class="tool" id="t-cal" role="tabpanel"></section>
+  <section class="tool" id="t-seed" role="tabpanel" hidden></section>
+  <section class="tool" id="t-attract" role="tabpanel" hidden></section>
+  <section class="tool" id="t-feeder" role="tabpanel" hidden></section>
+
+  <section class="panel" id="lAlerts">
+    <div class="sec-h" style="border:0;padding:0"><h2>Land alerts</h2><span class="lbl">Free</span></div>
+    <p>Get a phone alert when rain washes out an attractant site, or a feeder is about to run empty.</p>
+    <button class="btn" id="lAlertBtn" type="button">🔔 Turn on land alerts</button>
+    <p class="note" id="lAlertNote"></p>
+  </section>
+  <p class="note" style="text-align:center">Rain data from Open-Meteo. Seed rates from university extension guides (Arkansas, Mississippi State, Georgia). Always go by your bag's label.</p>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+<script type="module" src="/land/land.js"></script>
+</body>
+</html>

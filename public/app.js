@@ -601,6 +601,7 @@ const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent), isAndroid = /Android/.
 const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
 function alertNote(msg) { const n = $("alertNote"); n.hidden = !msg; n.textContent = msg || ""; }
 function renderAlerts() {
+  try { $("landLink").href = PROP && !PROP.sample && !PROP.shared ? "/land/?p=" + encodeURIComponent(PROP.id) : "/land/"; } catch (e) {}
   if (!PROP) return;
   $("alertSpot").textContent = PROP.name;
   const list = alertsLocal(), mine = list.find(a => a.key === spotKey(PROP));

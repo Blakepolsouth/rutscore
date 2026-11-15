@@ -1,0 +1,39 @@
+/* Land Manager: same broadcast look as Rut Score */
+.lhead{display:flex;flex-direction:column;gap:8px;padding-top:6px}
+.lhead h1{margin:0;font-family:var(--f-board);font-weight:900;font-size:clamp(30px,8.5vw,40px);line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+.propsel{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.propsel select,.tool select,.tool input{font:inherit;font-size:16px;color:var(--chalk);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:9px 10px;min-width:0;width:100%}
+.legal{margin:0;font-size:12.5px;color:var(--muted);border-left:3px solid var(--fair);padding:6px 10px;background:rgba(255,194,51,.06)}
+.ltabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;position:sticky;top:calc(56px + env(safe-area-inset-top,0px));z-index:8;background:var(--field);padding:6px 0}
+.ltabs button{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:9px 2px;font-family:var(--f-label);font-weight:800;letter-spacing:.02em;text-transform:uppercase;font-size:12px;line-height:1.25;color:var(--chalk)}
+.ltabs button[aria-selected="true"]{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.tool{display:flex;flex-direction:column;gap:12px}
+.tool h2{margin:0;font-family:var(--f-board);font-weight:800;font-size:24px;text-transform:uppercase;letter-spacing:.02em;line-height:1}
+.tool p{margin:0}
+.muted{color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f > span{font-family:var(--f-label);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:var(--muted)}
+.result{background:var(--panel-2);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.big{font-family:var(--f-board);font-weight:900;font-size:40px;line-height:1;color:var(--gold)}
+.big small{font-size:18px;color:var(--chalk);font-weight:700}
+.item{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ihead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ihead b{font-family:var(--f-label);font-weight:800;font-size:18px;letter-spacing:.03em;text-transform:uppercase}
+.x{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline}
+.meter{height:12px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%}
+.status{font-family:var(--f-label);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:14px}
+.add{border:1px dashed var(--line);background:transparent;border-radius:6px;padding:12px;font-family:var(--f-label);font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--gold)}
+.cal{display:flex;flex-direction:column;gap:8px}
+.months{display:grid;grid-template-columns:repeat(12,1fr);font-family:var(--f-label);font-size:11px;color:var(--muted);text-align:center}
+.bar{position:relative;height:26px;background:var(--panel);border-radius:3px;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:3px;opacity:.9}
+.bar span{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);white-space:nowrap}
+.now{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;z-index:2}
+.calwrap{position:relative;display:flex;flex-direction:column;gap:6px}
+.ltip{font-size:13.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+.partner{border:1px solid var(--gold);border-radius:6px;padding:10px 12px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--chalk);color:var(--ink);padding:10px 16px;border-radius:4px;font-weight:700;font-size:14px;max-width:calc(100% - 32px);text-align:center}
+.row2 .f,.row3 .f{justify-content:flex-end}
