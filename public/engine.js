@@ -205,6 +205,13 @@ export function buildModel(h, tz, place, opts) {
       pNoon: (hrs.find(x => x.hr === 12) || hrs[0]).p,
       pTrend: (hrs.find(x => x.hr === 18) || hrs[hrs.length - 1]).p - (hrs.find(x => x.hr === 6) || hrs[0]).p,
       tmax, tmin: Math.min(...hrs.map(x => x.tmp)), dT, hasPrev: prevMax != null,
+      ...(() => { // what yesterday was like, and how today's weather moves through shooting hours (for movement triggers)
+        const ph = i > 0 ? H.filter(x => x.key === keys[i - 1]) : [], day = ph.filter(x => x.hr >= 7 && x.hr <= 18);
+        const wet = hunt.filter(x => x.pr >= .02), am = hrs.filter(x => x.hr < 13).reduce((a, x) => a + x.pr, 0), pm = hunt.filter(x => x.hr >= 14).reduce((a, x) => a + x.pr, 0);
+        const firstWet = wet.length ? wet[0].ms : null, lastWet = wet.length ? wet[wet.length - 1].ms + 3600e3 : null;
+        return { prevRain: ph.length ? ph.reduce((a, x) => a + x.pr, 0) : null, prevWind: day.length ? avg(day.map(x => x.w)) : null, prevTmin: ph.length ? Math.min(...ph.map(x => x.tmp)) : null,
+          pDropMax: hunt.length ? Math.min(...hunt.map(x => x.dp3)) : 0, rainAM: am, rainPM: pm, rainStart: firstWet, rainEnd: lastWet, rainHunt: wet.length };
+      })(),
       phase: mp.phase, illum: mp.fraction, storms: storms.length, rutKey, rutEstimated: !(opts.rut && RUT[opts.rut])
     };
     const rs = rutScore(rutKey, summary.rutEstimated, k, dT);
@@ -267,6 +274,22 @@ export function destPoint(lat, lon, bearing, meters) {
   const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(b));
   const l2 = l1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
   return { lat: p2 / rad, lon: l2 / rad };
+}
+
+/* Movement triggers: the weather changes that get deer on their feet (or keep them bedded), in plain English.
+   Returns [{ id, icon, title, why, tip, power }] strongest first. power 3 = big, 2 = solid, -1 = works against you. */
+export function triggers(s, fmt = ms => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric" })) {
+  const out = [], T = (id, icon, title, why, tip, power) => out.push({ id, icon, title, why, tip, power });
+  if (s.hasPrev && s.dT <= -8) T("cold", "🥶", `${Math.abs(Math.round(s.dT))}° cooler than yesterday`, "A cold snap makes deer burn more energy, so they get up and feed earlier, often in daylight.", "Be in the stand early this afternoon.", s.dT <= -15 ? 3 : 2);
+  if (!s.storms && (s.pTrend <= -3 || s.pDropMax <= -2.5)) T("drop", "📉", "Pressure falling ahead of a storm", "Deer sense the front coming and often feed hard in the hours before it hits.", s.rainStart ? `Rain looks to start around ${fmt(s.rainStart)}. Be on stand before it does.` : "Hunt the hours before the weather turns.", s.pTrend <= -5 ? 3 : 2);
+  const clearing = s.pTrend >= 2 && s.prevRain != null && s.prevRain >= .25 && s.rainPM < .02;
+  if (clearing) T("clear", "☀️", "Clearing after yesterday's storm", "After riding out bad weather, deer get up hungry once it clears and pressure rises.", "The first evening after a front is one of the best sits there is.", 3);
+  if (!clearing && s.rainAM >= .1 && s.rainPM < .02 && s.rainEnd) T("rainend", "🌦️", `Rain quits around ${fmt(s.rainEnd)}`, "Deer often move as soon as the rain stops, especially after a wet morning.", "Be in the stand when it clears.", 2);
+  if (s.prevTmin != null && s.tmin <= 32 && s.prevTmin > 34) T("frost", "❄️", "First frosty morning", "The first freeze after mild nights gets deer moving at first light.", "Don't skip the morning sit.", 2);
+  if (s.prevWind != null && s.prevWind >= 14 && s.wind < 9) T("calm", "🍃", "Wind lays down", `After yesterday's ${Math.round(s.prevWind)} mph wind, deer that sat tight come out to feed once it calms.`, "Good day to slip into a stand you've been saving.", 2);
+  if ((s.hasPrev && s.dT >= 10) || s.tmax > 80) T("warm", "🥵", s.tmax > 80 ? `Hot: ${Math.round(s.tmax)}°` : `${Math.round(s.dT)}° warmer than yesterday`, "Warm spells keep deer bedded through the day. Most movement slides to after dark.", "Sit the last 30 minutes of light, near water or thick cover.", -1);
+  if (s.wind > 18) T("wind", "💨", `Windy: ${Math.round(s.wind)} mph`, "Strong wind makes deer nervous since they can't hear or smell danger well.", "Hunt sheltered spots, low ground or the downwind side of ridges.", -1);
+  return out.sort((a, b) => b.power - a.power);
 }
 
 /* Plain-English reason: two short sentences */

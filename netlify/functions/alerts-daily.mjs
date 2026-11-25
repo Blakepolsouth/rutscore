@@ -4,7 +4,7 @@ import { getStore } from "@netlify/blobs";
 import webpush from "web-push";
 import { vapidKeys } from "../lib/shared.mjs";
 import { planAlerts, wordAlert } from "../lib/plan.mjs";
-import { buildModel, primeFor, tierOf, fetchForecast, fmtRange, DL, keyDate, SITE } from "../../public/engine.js";
+import { buildModel, primeFor, tierOf, fetchForecast, fmtRange, fmtT, triggers, DL, keyDate, SITE } from "../../public/engine.js";
 
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length); let i = 0;
@@ -34,7 +34,16 @@ export default async () => {
     const d = data.get(rec.spot.lat.toFixed(2) + "," + rec.spot.lon.toFixed(2)); if (!d) return;
     const M = buildModel(d.hourly, d.timezone || "UTC", rec.spot, { rut: rec.spot.rut || null });
     const plan = planAlerts(M.days, rec);
-    if (!plan.messages.length) { if (plan.changed) await store.setJSON(id, { ...rec, notified: plan.notified }); return; }
+    // Movement triggers (cold front, pressure drop, clearing after a storm…) for tomorrow, or a big one the day after.
+    const todayKey = M.days[0].key, trig = Object.fromEntries(Object.entries(rec.trig || {}).filter(([k]) => k >= todayKey));
+    let tg = null;
+    if (rec.triggers !== false) for (const [i, D] of [[1, M.days[1]], [2, M.days[2]]]) {
+      if (!D || trig[D.key]) continue;
+      const best = triggers(D.summary, ms => fmtT(ms, M.tz)).find(x => x.power >= (i === 1 ? 2 : 3));
+      if (best) { tg = { D, i, x: best }; break; }
+    }
+    if (!plan.messages.length && !tg) { if (plan.changed || Object.keys(trig).length !== Object.keys(rec.trig || {}).length) await store.setJSON(id, { ...rec, notified: plan.notified, trig }); return; }
+    const whenOf = (i, k) => i === 1 ? "Tomorrow" : DL[keyDate(k).getUTCDay()];
     try {
       for (const m of plan.messages) {
         const words = wordAlert(m, {
@@ -42,11 +51,21 @@ export default async () => {
           scoreText: d => d.rut != null ? `Rut ${d.rut} · Hunt ${d.score}` : `Hunt ${d.score}/10`,
           extra: d => { const { w } = primeFor(d); return w.start ? ` Prime ${fmtRange(w.start, w.end, M.tz)}.` : ""; }
         });
+        if (tg && m.d.key === tg.D.key && m.type !== "off") { words.body = `${tg.x.icon} ${tg.x.title}: ${tg.x.why} ` + words.body; trig[tg.D.key] = tg.x.id; tg = null; }
         const q = new URLSearchParams(); if (rec.spot.code) q.set("p", rec.spot.code); q.set("d", m.d.key);
         await webpush.sendNotification(rec.subscription, JSON.stringify({ ...words, tag: `hunt-${id}-${m.d.key}-${m.type}`, url: "/?" + q.toString() }), { TTL: 12 * 3600 });
         sent++;
       }
-      await store.setJSON(id, { ...rec, notified: plan.notified });
+      if (tg) {
+        const { w } = primeFor(tg.D), q = new URLSearchParams(); if (rec.spot.code) q.set("p", rec.spot.code); q.set("d", tg.D.key);
+        await webpush.sendNotification(rec.subscription, JSON.stringify({
+          title: `${tg.x.icon} ${whenOf(tg.i, tg.D.key)} at ${rec.spot.name}: ${(tg.x.title.charAt(0).toLowerCase() + tg.x.title.slice(1)).replace("than yesterday", tg.i === 1 ? "than today" : "than the day before").replace("yesterday's", tg.i === 1 ? "today's" : "the day before's")}`,
+          body: `${tg.x.why} ${tg.x.tip}${w.start ? ` Prime ${fmtRange(w.start, w.end, M.tz)}.` : ""}`,
+          tag: `trig-${id}-${tg.D.key}`, url: "/?" + q.toString()
+        }), { TTL: 12 * 3600 });
+        trig[tg.D.key] = tg.x.id; sent++;
+      }
+      await store.setJSON(id, { ...rec, notified: plan.notified, trig });
     } catch (e) { if (e && (e.statusCode === 404 || e.statusCode === 410)) { await store.delete(id); removed++; } }
   });
   console.log(`Hunt alerts: ${records.length} alerts, ${spots.size} locations, ${sent} sent, ${removed} expired removed, ${Date.now() - started} ms`);
